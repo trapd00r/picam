@@ -3,18 +3,62 @@ use warnings;
 use Net::Twitter;
 use Getopt::Long;
 
-my     $APP = 'picam_twitter';
-my $VERSION = 0.02;
+
+sub usage {
+  my     $APP = 'picam';
+  my $VERSION = 0.02;
+
+  pod2usage(
+       msg  => "$APP v$VERSION\n",
+    verbose => 1,
+    exitval => 0,
+  );
+}
+
+# If --help is called, there's no reason to go any further.
+# Make Pod::Usage spit out the help, based on the POD at the very end of this
+# file.
+
+BEGIN {
+  use Pod::Usage;
+  if( (!@ARGV) or ($ARGV[0] =~ m/--?h(?:elp)?\z/) ) {
+    usage();
+    exit;
+  }
+}
+
+my $image_dir    = "$ENV{HOME}/camera/";
+
+# the Net::Twitter::update_with_media method expects an array ref... and the
+# documentation for said module is sparse at best.
+my @image_latest = ("$image_dir/latest.png");
 
 
-my @latest_image = ("$ENV{HOME}/camera/latest.png");
+
+
+# TODO FIXME 
+#tweet(@ARGV ? @ARGV : \&uptime);
 
 
 GetOptions(
-  'h|help'   => \&usage,
-  'd|daemon' => \&daemonize,
+  't|tweet'     => sub { tweet(uptime()); },
+  'd|daemon'    => \&daemonize,
+
+  'h|help'      => \&usage,
+  'v|version'   => sub { printf "$0 v0.02\n"; exit; },
 );
 
+
+sub uptime {
+  my $uptime = `uptime`;
+  chomp $uptime;
+  return $uptime;
+}
+
+# The needed twitter details is imported from shell variables.
+# Export them in your shellrc, but make sure NOT to share that rc to the world.
+#   TWITTER_ACCESS_{SECRET,TOKEN}
+#   TWITTER_CONSUMER_{SECRET,TOKEN}
 
 sub tweet {
   my ($text) = @_;
@@ -33,11 +77,50 @@ sub tweet {
   $twitter->update_with_media(
     {
       status => $text,
-      media  => \@latest_image,
+      media  => \@image_latest,
     }
-  );
+  ) and printf "@image_latest tweeted!\nCaption:\033[31;1m%s\033[m\n", $text;
 }
 
-tweet(
-  @ARGV ? @ARGV : "this is autoposted"
-);
+
+
+=pod
+
+=head1 NAME
+
+picam - RPi based surveillance camera that autoposts on twitter
+
+=head1 DESCRIPTION
+
+picam is a Raspberry Pi based surveillance camera daemon that autoposts its
+updates on twitter.
+
+=head1 OPTIONS
+
+  -t, --tweet   go live on twitter
+  -d, --daemon  detach from terminal and run in background
+
+  -h, --help    show the help, and exit
+  -v, --version show version, and exit
+
+
+=head1 ENVIRONMENT
+
+To upload to twitter, picam needs four difference environment variables to be
+set. You will get the information needed from the Twitter "create app" page.
+The variables that need to be set is:
+
+  TWITTER_ACCESS_TOKEN
+  TWITTER_ACCESS_SECRET
+  TWITTER_CONSUMER_KEY
+  TWITTER_CONSUMER_SECRET
+
+=head1 AUTHOR
+
+  Magnus Woldrich
+  CPAN ID: WOLDRICH
+  http://github.com/trapd00r
+  http://japh.se
+  m@japh.se
+
+=cut
