@@ -10,7 +10,7 @@ use Getopt::Long;
 #< usage and help
 sub usage {
   my     $APP = 'picam';
-  my $VERSION = 0.03;
+  my $VERSION = 0.07;
 
   pod2usage(
        msg  => "$APP v$VERSION\n",
@@ -100,7 +100,7 @@ sub tweet {
       status => $text,
       media  => \@image_latest,
     }
-  ) and printf "@image_latest tweeted!\nCaption:\033[31;1m%s\033[m\n", $text;
+  ) and printf "@image_latest tweeted!\nCaption: \033[31;1m%s\033[m\n", $text;
 }
 #>
 
