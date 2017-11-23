@@ -67,7 +67,7 @@ GetOptions(
 sub set_twitter_status {
   my $status = shift;
   if(!defined($status)) {
-    $status = `uptime`;
+    $status = `./bin/pi_status`;
   }
   chomp $status;
   return $status;

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+temp_karlstad=$(curl -s http://www.temperatur.nu/termo/karlstad/temp.txt)
+up=$(uptime | perl -pe 's/,.+$//' | perl -pe 's/\w+:\w+:\w+ up //') 
+
+printf "PiCam up:$up | Karlstad, Sweden: $temp_karlstad C\n"
