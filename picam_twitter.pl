@@ -1,12 +1,16 @@
+#!/usr/bin/perl
+# vim:fdm=marker:
+
 use strict;
 use warnings;
 use Net::Twitter;
 use Getopt::Long;
 
 
+#< usage and help
 sub usage {
   my     $APP = 'picam';
-  my $VERSION = 0.02;
+  my $VERSION = 0.03;
 
   pod2usage(
        msg  => "$APP v$VERSION\n",
@@ -26,34 +30,51 @@ BEGIN {
     exit;
   }
 }
+#>
 
-my $image_dir    = "$ENV{HOME}/camera/";
+#< variables
+my $image_dir      = "$ENV{HOME}/camera/";
+my $pidfile        = "$ENV{HOME}/picam.pid";
+
+# time between tweets. default is 30 min.
+my $sleep          = 1800;
 
 # the Net::Twitter::update_with_media method expects an array ref... and the
 # documentation for said module is sparse at best.
 my @image_latest = ("$image_dir/latest.png");
+#>
 
-
-
-
-# TODO FIXME 
-#tweet(@ARGV ? @ARGV : \&uptime);
-
-
+#< options handling
+# if an argument is passed to --tweet, set twitter status to supplied data.
+# else, post system uptime.
 GetOptions(
-  't|tweet'     => sub { tweet(uptime()); },
-  'd|daemon'    => \&daemonize,
+  't|tweet'     => sub {
+    while(1) {
+      printf "tweeting \"@ARGV\"\n";
+      tweet(set_twitter_status(@ARGV));
+      printf "sleeping for $sleep s...\n";
+      sleep $sleep;
+    }
+  },
+  'd|daemon'    => sub { daemonize("$ENV{HOME}/picam_log"); },
 
   'h|help'      => \&usage,
   'v|version'   => sub { printf "$0 v0.02\n"; exit; },
 );
+#>
 
-
-sub uptime {
-  my $uptime = `uptime`;
-  chomp $uptime;
-  return $uptime;
+#< status functions
+sub set_twitter_status {
+  my $status = shift;
+  if(!defined($status)) {
+    $status = `uptime`;
+  }
+  chomp $status;
+  return $status;
 }
+#>
+
+#< do the twitter!
 
 # The needed twitter details is imported from shell variables.
 # Export them in your shellrc, but make sure NOT to share that rc to the world.
@@ -81,6 +102,40 @@ sub tweet {
     }
   ) and printf "@image_latest tweeted!\nCaption:\033[31;1m%s\033[m\n", $text;
 }
+#>
+
+#< detach and daemonize
+sub daemonize {
+  # in most cases, we don't care for any log output
+  my $daemon_log = shift // '/dev/null';
+
+  use POSIX 'setsid';
+  my $PID = fork();
+
+  exit 0 if $PID;            # parent process
+  exit 1 if(!defined($PID)); # out of resources. not likely :) 
+
+  setsid();
+
+  $PID = fork();
+  exit 1 if(!defined($PID));
+
+  if($PID) { # parent
+    open(my $fh, '>', $pidfile) or confess($!);
+
+    # print the process id to pidfile
+    print $fh $$;
+    close $fh;
+
+    waitpid($PID, 0);
+    #unlink $pidfile;
+   }
+ }
+#>
+
+
+
+
 
 
 
@@ -97,7 +152,7 @@ updates on twitter.
 
 =head1 OPTIONS
 
-  -t, --tweet   go live on twitter
+  -t, --tweet   tweet, with optional status message
   -d, --daemon  detach from terminal and run in background
 
   -h, --help    show the help, and exit

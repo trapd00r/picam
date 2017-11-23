@@ -19,6 +19,9 @@ while true; do
   printf -- "----------\n"
   raspistill -vf -hf -n -o $FILE && printf "$FILE written\n"
   scp $FILE ${USER}@${HOST}:${SAVE_DIR_REMOTE} && cp -v $FILE $SAVE_DIR_LOCAL/latest.jpg && rm -v $FILE
+  # resize the picture for twitter.
+  cd $SAVE_DIR_LOCAL
+  convert -resize 25% latest.jpg latest.png
   printf -- "----------\n"
   sleep $SLEEP
 done
