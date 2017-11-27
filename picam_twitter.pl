@@ -161,7 +161,7 @@ updates on twitter.
 
 =head1 ENVIRONMENT
 
-To upload to twitter, picam needs four difference environment variables to be
+To upload to twitter, picam needs four different environment variables to be
 set. You will get the information needed from the Twitter "create app" page.
 The variables that need to be set is:
 
