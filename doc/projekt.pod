@@ -1,0 +1,168 @@
+=pod
+
+=head2 Projekt baserat på Raspberry Pi
+
+=head3 Picam live!
+
+picam kan ses live på L<http://twitter.com/wantarray>.
+
+=head1 PiCAM
+
+Jag har valt att inhandla en kameramodul till min Pi och bygga in den
+i chassit.
+
+Redan från början hade jag en tanke om att det vore häftigt att bygga
+en twitter-uppkopplad ultraportabel kamerarobot. Jag var inte säker på
+om jag skulle komma hela vägen, men det har jag gjort.
+
+Komponenter som används för detta bygge:
+
+    Raspberry Pi 3
+    Pi camera module v2
+    Perl
+    Shell script
+    Imagemagick
+
+
+Jag har använt Perl till så mycket som möjligt. Denna html-sida är
+skriven i markup-språket B<pod> (Plain Old Documentation) och genererad
+till html med hjälp av B<pod2html>.
+
+    $ pod2html --no-index --header -css doc/default.css picam_twitter.pl > picam_twitter.pod
+
+Därför ber jag dig att inte läsa den råa html-filen, den ser ut som
+skräp.
+
+CSS-filen har jag skrivit för hand.
+
+Steg för steg-instruktioner för att sätta upp picam och
+hjälpscriptet pisnap som tar själva bilderna:
+
+Börja med att installera B<cpanminus>. Det är inget krav, men det är
+så mycket bättre än cpan. Binären cpan(m) används för att
+installera perlmoduler, eller bibliotek. från Comprehensive Perl
+Archive Network. När vi ändå håller på så kan vi installera
+B<Imagemagick> som används för att justera storleken på tagen bild
+så att vi inte överskrider twitters max-storlek.
+
+    # apt-get install cpanminus imagemagick
+
+När installationen är klar skall vi konfiguera så att bibliotek kan
+installeras av en vanlig användare, i dennes hemkatalog. Detta är inte
+heller något krav, men kan vara bra om man inte har tillgång till root
+eller om man inte vill installera saker system-wide.
+
+Öppna din shellrc med valfri editor:
+
+    $ vim ~./zshrc
+
+Lägg till följande rader (förslagsvis längst ned i filen):
+
+    PERL5LIB="$HOME/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+    PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+    PERL_MB_OPT="--install_base \"$HOME/perl5\""; export PERL_MB_OPT;
+    PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"; export PERL_MM_OPT;
+
+Spara, och re-sourca filen (eller starta ett nytt skal).
+
+Se till att katalogen där modulerna skall installeras existerar:
+
+    $ mkdir -p ~/perl5/lib
+
+Nu kan vi installera de bibliotek som picam beror på. Notera att det
+då skall göras som din vanliga användare!
+
+    $ cpanm Net::Twitter
+
+När installationen är klar så kommer B<~/perl5/lib/perl5/Net/Twitter>
+vara populerad.
+
+För att kunna posta på twitter så behövs ett antal API-nycklar.
+Dessa nycklar får man tillgång till genom att ansöka om
+utvecklarstatus, och det tar bara någon minut. För att vårt program
+sedan skall kunna ta del av dessa nycklar så behöver de (exempelvis)
+exporteras i din shellrc.
+
+Alltså:
+
+    export TWITTER_ACCESS_SECRET='<secret>'
+    export TWITTER_CONSUMER_SECRET='<secret>'
+    export TWITTER_ACCESS_TOKEN='<token>'
+    export TWITTER_CONSUMER_KEY='<key>'
+
+Spara och re-sourca shellrc.
+
+B<pisnap> tar en bild med hjälp av raspistill. Eftersom utrymmet på
+Pi är begränsat har jag valt att skicka filen till min server i
+sambons garderob. Den lokala filen tas sedan bort. Här kommer du att
+behöva editera:
+
+               USER='scp1'
+               HOST='laleh'
+    SAVE_DIR_REMOTE='_picam'
+
+Alternativt kommentera ut de ssh-specifika raderna.
+
+------------------
+
+Nu är mjukvarusidan av konfigurationen (nästan) klar. Jag har tagit
+för givet att du redan har installerat kameramodulen i din Pi, och det
+enda som då behöver göras är att faktiskt tala om för vår Pi att
+vi vill använda den.
+
+Kör, som root:
+
+    # raspi-config
+
+Under B<Interfacing options>, välj B<Enable Raspberry Pi Camera>. Spara
+och avsluta. Det som nu sker är bland annat att B<raspistill>
+installeras, den binär pisnap använder för att ta själva bilderna.
+
+
+=head1 Funktionalitet
+
+=head2 Hjälpscript
+
+Jag har skrivit ett antal hjälpskript som arbetar tillsammans med
+picam.
+
+=head3 bin/pi_status
+
+pi_status är ett shellscript som levererar data för picam att använda
+som statusuppdatering på twitter om ingen egen status har specificerats
+med flaggan -t till picam. I nuläget är det min Pi:s uptime och
+aktuell timtemperatur i Karlstad som genereras.
+
+=head3 pisnap
+
+pi_snap gör flera intressanta saker, i en evig loop.
+Ett kort tas med kameran med hjälp av raspistill. Denna bild skickas
+till min privata server, och en kopia av det senaste tagna fotot
+kopieras till filen B<latest.jpg>. Originalfilen tas bort från Pi,
+så att det alltid enbart kommer att finnas en bildfil lokalt (den
+senast tagna).
+
+Kopian justeras i storlek för uppladdning på twitter, med hjälp av
+B<convert> från imagemagick.
+
+pisnap har en sleep-interval på 1730 sekunder. Detta för att själva
+picam har en sleep-interval på 1800 sekunder - för att vara säker
+på att pisnap hinner med alla uppgifter, även under tung belastning,
+innan picam sätter igång sin nästa loop. Annars finns det en liten
+risk att det är den näst senaste tagna bilden som kommer att laddas
+upp på twitter.
+
+=head1 picam
+
+Picam kan ta emot ett antal flaggor.
+
+    -t,  --tweet      tweeta senast tagna bild med önskad status som argument
+    -d,  --daemonize  kör picam som en daemon, dvs i bakgrunden
+    -h,  --help       visa hjälpen och avsluta
+    -v,  --version    visa version och avsluta
+
+Picam twittrar live på L<http://twitter.com/wantarray>.
+
+Källkoden för picam och samtliga filer i detta projekt återfinns på L<https://github.com/trapd00r/picam>
+
+=cut
