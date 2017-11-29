@@ -13,7 +13,13 @@
 SAVE_DIR_REMOTE="_picam"
           SLEEP=1730
 
+# make sure the dir where the images are about to be saved exists.
+# picam expects this.
+mkdir -p $SAVE_DIR_LOCAL
+
 while true; do
+  # give the image a meaningful name, template looks like this:
+  # 2017-11-19_024431.jpg
   FILE=$(date +"%Y-%m-%d_%H%M%S").jpg
 
   printf -- "----------\n"
