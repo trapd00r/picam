@@ -19,6 +19,10 @@
 
 <h2 id="Projekt-baserat-p-Raspberry-Pi">Projekt baserat p&aring; Raspberry Pi</h2>
 
+<h3 id="Picam-live">Picam live!</h3>
+
+<p>picam kan ses live p&aring; <a href="http://twitter.com/wantarray">http://twitter.com/wantarray</a>.</p>
+
 <h1 id="PiCAM">PiCAM</h1>
 
 <p>Jag har valt att inhandla en kameramodul till min Pi och bygga in den i chassit.</p>
@@ -81,7 +85,7 @@
     export TWITTER_ACCESS_TOKEN=&#39;&lt;token&gt;&#39;
     export TWITTER_CONSUMER_KEY=&#39;&lt;key&gt;&#39;</code></pre>
 
-<p>Spara och re-sourcea shellrc.</p>
+<p>Spara och re-sourca shellrc.</p>
 
 <p><b>pisnap</b> tar en bild med hj&auml;lp av raspistill. Eftersom utrymmet p&aring; Pi &auml;r begr&auml;nsat har jag valt att skicka filen till min server i sambons garderob. Den lokala filen tas sedan bort. H&auml;r kommer du att beh&ouml;va editera:</p>
 
@@ -89,7 +93,7 @@
                HOST=&#39;laleh&#39;
     SAVE_DIR_REMOTE=&#39;_picam&#39;</code></pre>
 
-<p>Alternativt kommentera ut de relevanta raderna.</p>
+<p>Alternativt kommentera ut de ssh-specifika raderna.</p>
 
 <p>------------------</p>
 
@@ -105,6 +109,8 @@
 
 <h2 id="Hjlpscript">Hj&auml;lpscript</h2>
 
+<p>Jag har skrivit ett antal hj&auml;lpskript som arbetar tillsammans med picam.</p>
+
 <h3 id="bin-pi_status">bin/pi_status</h3>
 
 <p>pi_status &auml;r ett shellscript som levererar data f&ouml;r picam att anv&auml;nda som statusuppdatering p&aring; twitter om ingen egen status har specificerats med flaggan -t till picam. I nul&auml;get &auml;r det min Pi:s uptime och aktuell timtemperatur i Karlstad som genereras.</p>
@@ -117,361 +123,18 @@
 
 <p>pisnap har en sleep-interval p&aring; 1730 sekunder. Detta f&ouml;r att sj&auml;lva picam har en sleep-interval p&aring; 1800 sekunder - f&ouml;r att vara s&auml;ker p&aring; att pisnap hinner med alla uppgifter, &auml;ven under tung belastning, innan picam s&auml;tter ig&aring;ng sin n&auml;sta loop. Annars finns det en liten risk att det &auml;r den n&auml;st senaste tagna bilden som kommer att laddas upp p&aring; twitter.</p>
 
-<h1 id="END-PICAM">--- END PICAM --</h1>
+<h1 id="picam">picam</h1>
 
-<h2 id="GIT">GIT</h2>
+<p>Picam kan ta emot ett antal flaggor.</p>
 
-<p>Install dependencies from CPAN. As root:</p>
+<pre><code>    -t,  --tweet      tweeta senast tagna bild med &ouml;nskad status som argument
+    -d,  --daemonize  k&ouml;r picam som en daemon, dvs i bakgrunden
+    -h,  --help       visa hj&auml;lpen och avsluta
+    -v,  --version    visa version och avsluta</code></pre>
 
-<pre><code>    cpan Term::ExtendedColor Term::ReadLine::Gnu Config::General Audio::MPD \
-         Time::Duration</code></pre>
+<p>Picam twittrar live p&aring; <a href="http://twitter.com/wantarray">http://twitter.com/wantarray</a>.</p>
 
-<p>As user:</p>
-
-<pre><code>    git clone git://github.com/trapd00r/pimpd2.git
-    cd pimpd2
-    perl Makefile.PL
-    make &amp;&amp; su -c &#39;make install&#39;
-    cp doc/pimpd2.conf.example $HOME/.pimpd2.conf</code></pre>
-
-<p>Edit the configuration file and start pimpd2:</p>
-
-<pre><code>    vim $HOME/.pimpd2.conf &amp;&amp; pimpd2</code></pre>
-
-<h1 id="FEATURES">FEATURES</h1>
-
-<h2 id="np---now-playing">-np, --now-playing</h2>
-
-<p>Show basic song information on a single line.</p>
-
-<h2 id="i---info">-i, --info</h2>
-
-<p>Show all available song information and MPD server status.</p>
-
-<h2 id="cp---copy">-cp, --copy</h2>
-
-<p>Copy the currently playing song to destination.</p>
-
-<p>If destination is omitted, uses the <code>target_directory</code> variable from the configuration file.</p>
-
-<h2 id="cpa---copy-album">-cpa, --copy-album</h2>
-
-<p>Copy the currently playing album to destination.</p>
-
-<p>If destination is omitted, uses the <code>target_directory</code> variable from the configuration file.</p>
-
-<h2 id="sh---shell">-sh, --shell</h2>
-
-<p>Spawn the interactive pimpd2 shell.</p>
-
-<p>All the regular features can be used. Commands that return data that can be added to the current playlist will do so automagically for convenience, since we can not read from standard input while being interactive.</p>
-
-<h2 id="q---queue">-q, --queue</h2>
-
-<p>Queue tracks. Arguments must be valid playlist position IDs as shown in the <code>--playlist</code> output.</p>
-
-<p>You can also use the <code>--search-playlist</code> command if the tracks to be queued follows a pattern.</p>
-
-<h1 id="PLAYLIST-INTERACTION">PLAYLIST INTERACTION</h1>
-
-<h2 id="pls---playlist">-pls, --playlist</h2>
-
-<p>Show the current playlist.</p>
-
-<h2 id="playlists">--playlists</h2>
-
-<p>List all playlists known by MPD.</p>
-
-<h2 id="af---add-files">-af, --add-files</h2>
-
-<p>Add files to the current playlist.</p>
-
-<p>Can read from standard input:</p>
-
-<pre><code>  pimpd2 --randomize 42 Nirvana | pimpd2 -af</code></pre>
-
-<p>Accepts file arguments:</p>
-
-<pre><code>  pimpd2 -af ~/music/Nirvana/Bleach/*.flac</code></pre>
-
-<h2 id="a---add-playlist">-a, --add-playlist</h2>
-
-<p>Add playlist to the current playlist.</p>
-
-<p>If not given a full name, and the name partially matches existing playlists, prompts for input:</p>
-
-<pre><code>  pimpd2 -a 2010
-
-    0 2010-12-indie
-    1 2010-12-other
-    2 2010-12-pop
-    3 2010-12-punk_rock
-    4 2010-12-rock
-    5 2010-12-undef
-  choice:</code></pre>
-
-<p>If choice equals &#39;all&#39;, all matching playlists are added.</p>
-
-<h2 id="r---randomize">-r, --randomize</h2>
-
-<p>Return <b>n</b> random songs from the collection. The first argument is the number of songs, the second argument is an optional artist name. If an artist name is specified, will only return random songs from that particular artist.</p>
-
-<p>If no arguments are specified, returns 100 random songs.</p>
-
-<p>If you want to add the results to the current playlist, pipe it to <code>--add-files</code>:</p>
-
-<pre><code>  pimpd2 -r 12 | pimpd2 -af</code></pre>
-
-<p>Or use the interactive shell ( <code>-sh</code> ) which does this for you automatically.</p>
-
-<h2 id="ra---random-album">-ra, --random-album</h2>
-
-<p>Return <b>n</b> random full albums.</p>
-
-<p>A pipe to <code>--add-files</code> will add the results to the current playlist.</p>
-
-<h2 id="rma---rmalbum">-rma, --rmalbum</h2>
-
-<p>Given a string, searches the current playlist for matching albums, and remove them from the playlist. The string can be a regular expression.</p>
-
-<h2 id="da---delete-album">-da, --delete-album</h2>
-
-<p>Delete the current album from disk.</p>
-
-<h2 id="f---love">-f, --love</h2>
-
-<p>Favorize, or love, the current song.</p>
-
-<p>If called with zero arguments, the song will be saved to a playlist following this naming scheme:</p>
-
-<pre><code>  %year-%month-%genre.m3u</code></pre>
-
-<p>Else, the argument is used for the playlist name, thus:</p>
-
-<pre><code>  pimpd2 --love lovesongs</code></pre>
-
-<p>adds the song to lovesongs.m3u</p>
-
-<h2 id="loved">--loved</h2>
-
-<p>Check if the currently playing song is already loved or not.</p>
-
-<h2 id="unlove">--unlove</h2>
-
-<p>Unlove songs matching given PATTERN.</p>
-
-<h2 id="lsp---lsplaylist">-lsp, --lsplaylist</h2>
-
-<p>List songs in external playlists. The logic from <code>--add-playlist</code> is used here as well:</p>
-
-<pre><code>  pimpd2 -sip 2010
-
-    0 2010-12-indie
-    1 2010-12-other
-    2 2010-12-pop
-    3 2010-12-punk_rock
-    4 2010-12-rock
-    5 2010-12-undef
-  Choice:</code></pre>
-
-<p>thus &#39;all&#39; or simply hitting enter will list all songs in all playlists matching &#39;2010&#39;.</p>
-
-<h2 id="slove">--slove</h2>
-
-<p>Search the database with loved songs for PATTERN.</p>
-
-<p>If PATTERN is omitted, returns all loved songs.</p>
-
-<h2 id="spl---search-playlist">-spl, --search-playlist</h2>
-
-<p>Search the current playlist for string, possibly a regular expression.</p>
-
-<p>If more then one song is found, queues up the results. See <code>--queue</code>.</p>
-
-<h1 id="COLLECTION-INTERACTION">COLLECTION INTERACTION</h1>
-
-<h2 id="lsa---songs">-lsa, --songs</h2>
-
-<p>List all songs on album.</p>
-
-<p>If no argument is specified, use the album tag from the currently playing song.</p>
-
-<p>A pipe to <code>--add-files</code> will add the results to the current playlist:</p>
-
-<pre><code>  pimpd2 -lsa Stripped | pimpd2 -af</code></pre>
-
-<h2 id="l---albums">-l, --albums</h2>
-
-<p>List all albums where artist is featured.</p>
-
-<p>If no argument is specified, use the artist tag from the currently playing song.</p>
-
-<h2 id="sdb---search-db">-sdb, --search-db</h2>
-
-<p>Search the database for string, possibly a regular expression.</p>
-
-<p>A pipe to <code>--add-files</code> will add the results to the current playlist:</p>
-
-<h2 id="sar---search-artist">-sar, --search-artist</h2>
-
-<p>Search the database for artist.</p>
-
-<p>A pipe to <code>--add-files</code> will add the results to the current playlist:</p>
-
-<h2 id="sal---search-album">-sal, --search-album</h2>
-
-<p>Search the database for album.</p>
-
-<p>A pipe to <code>--add-files</code> will add the results to the current playlist:</p>
-
-<h2 id="set---search-title">-set, --search-title</h2>
-
-<p>Search the database for title.</p>
-
-<p>A pipe to <code>--add-files</code> will add the results to the current playlist:</p>
-
-<h1 id="CONTROLS">CONTROLS</h1>
-
-<h2 id="n---next">-n, --next</h2>
-
-<p>Play the next track in the playlist.</p>
-
-<h2 id="p---previous">-p, --previous</h2>
-
-<p>Play the previous track in the playlist.</p>
-
-<h2 id="cl---clear">-cl, --clear</h2>
-
-<p>Clear the current playlist.</p>
-
-<h2 id="cr---crop">-cr, --crop</h2>
-
-<p>Remove all songs but the current one from the playlist.</p>
-
-<h2 id="x---xfade">-x, --xfade</h2>
-
-<p>Set crossfade.</p>
-
-<h2 id="pause">--pause</h2>
-
-<p>Toggle playback status.</p>
-
-<h2 id="repeat">--repeat</h2>
-
-<p>Toggle repeat on/off</p>
-
-<h2 id="random">--random</h2>
-
-<p>Toggle random on/off</p>
-
-<h2 id="play">--play</h2>
-
-<p>Start playback.</p>
-
-<p>If a remote stream URL and an external player is specified in the configuration file, starts playback on the local machine as well as on the MPD server.</p>
-
-<h2 id="stop">--stop</h2>
-
-<p>Stop playback, locally and remote.</p>
-
-<h2 id="kill">--kill</h2>
-
-<p>Stop local playback.</p>
-
-<h1 id="OPTIONS">OPTIONS</h1>
-
-<pre><code>  -np,   --now-playing      basic song info on a single line
-  -i,    --info             full song info
-  -cp,   --copy             copy the current track to destination
-  -cpa,  --copy-album       copy the current album to destination
-  -sh,   --shell            spawn the interactive shell
-  -q,    --queue            queue tracks</code></pre>
-
-<h2 id="Playlist">Playlist</h2>
-
-<pre><code>  -pls,  --playlist         show the current playlist
-         --playlists        list all known playlists
-  -af,   --add-files        add files to playlist
-  -a,    --add-playlist     add playlist
-  -r,    --randomize        randomize a new playlist with n tracks
-  -ra,   --random-album     add n random full albums
-  -rma,  --rmalbum          remove album matching pattern from playlist
-  -da,   --delete-album     delete the current album from disk
-  -f,    --love             love song
-         --loved            check if the current song is loved
-  -u,    --unlove           unlove songs matching pattern
-  -lsp,  --lsplaylist       list songs in playlists
-  -spl,  --search-playlist  search the current playlist for str</code></pre>
-
-<h2 id="Collection">Collection</h2>
-
-<pre><code>  -lsa,  --songs            list songs on album
-  -l,    --albums           list albums by artist
-  -sdb,  --search-db        search database for pattern
-  -sar,  --search-artist    search database for artist
-  -sal,  --search-album     search database for album
-  -set,  --search-title     search database for title
-         --slove            search the database with loved songs for pattern
-         --stats            display statistics about MPD
-         --status           display MPD status</code></pre>
-
-<h2 id="Controls">Controls</h2>
-
-<pre><code>  -n,    --next             next track in playlist
-  -p,    --previous         previous track in playlist
-  -cl,   --clear            clear the playlist
-  -cr,   --crop             remove all songs but the current one from playlist
-  -x,    --xfade            set crossfade
-         --pause            toggle playback status
-         --repeat           toggle repeat mode
-         --random           toggle random mode
-
-  -p,    --play             start playback (locally and remote)
-  -s,    --stop             stop playback (locally and remote)
-  -k,    --kill             stop playback (locally)
-
-  -h,    --help             show the help and exit
-  -m,    --man              show the manual and exit
-  -v,    --version          show version info and exit</code></pre>
-
-<h1 id="ENVIRONMENT">ENVIRONMENT</h1>
-
-<p>pimpd2 will look for a configuration file in the following locations, in this order:</p>
-
-<pre><code>  ~/.config/pimpd2/pimpd.conf
-  ~/.pimpd2.conf
-  ~/pimpd2.conf
-  ./pimpd2.conf
-  /etc/pimpd2.conf</code></pre>
-
-<h1 id="AUTHOR">AUTHOR</h1>
-
-<pre><code>  Magnus Woldrich
-  CPAN ID: WOLDRICH
-  magnus@trapd00r.se
-  http://japh.se</code></pre>
-
-<h1 id="CONTRIBUTORS">CONTRIBUTORS</h1>
-
-<p>None required yet.</p>
-
-<h1 id="REPORTING-BUGS">REPORTING BUGS</h1>
-
-<p>Report bugs and/or feature requests to &lt;magnus@trapd00r.se&gt;, on <a>rt.cpan.org</a> or <a href="http://github.com/trapd00r/pimpd2/issues">http://github.com/trapd00r/pimpd2/issues</a>.</p>
-
-<h1 id="COPYRIGHT">COPYRIGHT</h1>
-
-<p>Copyright 2009, 2010, 2011 the <b>pimpd2</b> <a href="#AUTHOR">&quot;AUTHOR&quot;</a> and <a href="#CONTRIBUTORS">&quot;CONTRIBUTORS&quot;</a> as listed above.</p>
-
-<h1 id="LICENSE">LICENSE</h1>
-
-<p>This application is free software; you may redistribute it and/or modify it under the same terms as Perl itself.</p>
-
-<h1 id="SEE-ALSO">SEE ALSO</h1>
-
-<p><a href="http://man.he.net/man1/pimpd2.conf">pimpd2.conf(1)</a>, <a href="http://man.he.net/man1/mpd">mpd(1)</a></p>
-
-<p><a>App::Pimpd::Collection::Album</a>, <a>App::Pimpd::Collection::Search</a>, <a>App::Pimpd::Commands</a>, <a>App::Pimpd::Doc</a>, <a>App::Pimpd::Info</a>, <a>App::Pimpd::Player</a>, <a>App::Pimpd::Playlist</a>, <a>App::Pimpd::Playlist::Favorite</a>, <a>App::Pimpd::Playlist::Randomize</a>, <a>App::Pimpd::Playlist::Search</a>, <a>App::Pimpd::Shell</a>, <a>App::Pimpd::Transfer</a>, <a>App::Pimpd::Validate</a></p>
+<p>K&auml;llkoden f&ouml;r picam och samtliga filer i detta projekt &aring;terfinns p&aring; <a href="https://github.com/trapd00r/picam">https://github.com/trapd00r/picam</a></p>
 
 <h1 id="POD-ERRORS">POD ERRORS</h1>
 
